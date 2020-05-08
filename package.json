@@ -10,6 +10,7 @@
     "build:js": "node -e \"require('./entrypoint').buildJS()\"",
     "build:css": "node -e \"require('./entrypoint').buildCSS()\"",
     "build:html": "node -e \"require('./entrypoint').buildHTML()\"",
+    "build:static": "node -e \"require('./entrypoint').buildSTATIC()\"",
     "build": "node -e \"require('./entrypoint').build()\"",
     "test": "echo \"no tests\""
   },

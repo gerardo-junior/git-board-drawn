@@ -80,14 +80,20 @@ module.exports = entrypoint = {
 
             fs.outputFile(`${entrypoint.dist}/index.html`, out).then(() => {
                 console.log(`Wrote to ${entrypoint.dist}/index.html`)
+                
+                resolve(true)
+
             }).catch(err => reject(err))
 
         }).catch(err => reject(err))
 
     }),
 
+    buildSTATIC: () => fs.copy(`${__dirname}/static`, `${entrypoint.dist}`),
+
     build: () => new Promise((resolve, reject) => {
         const buildPack = () => new Promise(async (resolve, reject) => {
+            await entrypoint.buildSTATIC().catch(err => reject(err))
             await entrypoint.buildCSS().catch(err => reject(err))
             await entrypoint.buildJS().catch(err => reject(err))
             await entrypoint.buildHTML().catch(err => reject(err))
