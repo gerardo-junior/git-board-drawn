@@ -5,6 +5,8 @@
   "main": "app.js",
   "scripts": {
     "dev:start": "node -e \"require('./entrypoint').start()\"",
+    "dev:server": "node -e \"require('./entrypoint').watch()\"",
+    "dev:watch": "node -e \"require('./entrypoint').watch()\"",
     "dev:unboost": "sudo umount -f ./dist",
     "dev:boost": "sudo mount -t tmpfs -o size=265m tmpfs ./dist",
     "build:js": "node -e \"require('./entrypoint').buildJS()\"",

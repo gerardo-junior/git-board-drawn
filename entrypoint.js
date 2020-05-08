@@ -24,21 +24,21 @@ module.exports = entrypoint = {
             sourceMap: 'development' === process.env.NODE_ENV,
             sourceMapContents: 'development' === process.env.NODE_ENV,
             outputStyle: 'development' === process.env.NODE_ENV ? 'expanded':'compressed'
-        }, (err, result) => { 
+        }, (err, data) => { 
             if (err) reject(err)
 
-            fs.outputFile(`${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, result.css).then(() => {
-                console.log(`Wrote to ${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`)
+            fs.outputFile(`${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, data.css).then(result => {
+                console.info(`Wrote to ${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`)
 
                 if ('development' === process.env.NODE_ENV) {
-                    fs.outputFile(`${entrypoint.dist}/assets/styles.css.map`, result.map).then(() => {
-                        console.log(`Wrote to ${entrypoint.dist}/assets/styles.css.map`)
-                    }).catch(err => reject(err))
+                    fs.outputFile(`${entrypoint.dist}/assets/styles.css.map`, data.map).then(() => {
+                        console.info(`Wrote to ${entrypoint.dist}/assets/styles.css.map`)
+                    }).catch(reject)
                 }
 
-                resolve(true)
+                resolve(result)
                 
-            }).catch(err => reject(err))
+            }).catch(reject)
         })
     }),
 
@@ -51,12 +51,12 @@ module.exports = entrypoint = {
             if ('development' != process.env.NODE_ENV) {
 
                 if (!fs.existsSync(`${entrypoint.dist}/${assets.styles.url}`)) {
-                    await entrypoint.buildCSS().catch(err => reject(err))
+                    await entrypoint.buildCSS().catch(reject)
                 }
                 assets.styles.options += ` integrity=sha256-${require('sha256-file')(`${entrypoint.dist}/${assets.styles.url}`)} crossorigin=anonymous`
 
                 if (!fs.existsSync(`${entrypoint.dist}/${assets.scripts.url}`)) {
-                    await entrypoint.buildJS().catch(err => reject(err))
+                    await entrypoint.buildJS().catch(reject)
                 }
                 assets.scripts.options += ` integrity=sha256-${require('sha256-file')(`${entrypoint.dist}/${assets.scripts.url}`)} crossorigin=anonymous`
 
@@ -78,34 +78,76 @@ module.exports = entrypoint = {
                 })
             }
 
-            fs.outputFile(`${entrypoint.dist}/index.html`, out).then(() => {
-                console.log(`Wrote to ${entrypoint.dist}/index.html`)
+            fs.outputFile(`${entrypoint.dist}/index.html`, out).then(result => {
+                console.info(`Wrote to ${entrypoint.dist}/index.html`)
                 
-                resolve(true)
+                resolve(result)
 
-            }).catch(err => reject(err))
+            }).catch(reject)
 
-        }).catch(err => reject(err))
+        }).catch(reject)
 
     }),
 
-    buildSTATIC: () => fs.copy(`${__dirname}/static`, `${entrypoint.dist}`),
+    buildSTATIC: () => fs.copy(`${__dirname}/static`, `${entrypoint.dist}`, {overwrite: false}),
 
     build: () => new Promise((resolve, reject) => {
         const buildPack = () => new Promise(async (resolve, reject) => {
-            await entrypoint.buildSTATIC().catch(err => reject(err))
-            await entrypoint.buildCSS().catch(err => reject(err))
-            await entrypoint.buildJS().catch(err => reject(err))
-            await entrypoint.buildHTML().catch(err => reject(err))
+            await entrypoint.buildSTATIC().catch(reject)
+            await entrypoint.buildCSS().catch(reject)
+            await entrypoint.buildJS().catch(reject)
+            await entrypoint.buildHTML().catch(reject)
+        })
+        
+        if ('development' != process.env.NODE_ENV) {
+            entrypoint.dist.setup()
+                           .then(buildPack)
+                           .catch(reject)
+        } else {
+            buildPack().then(resolve)
+                       .catch(reject)
+        }
+    }),
+
+    server: () => {
+        bs.init({
+            server: `${entrypoint.dist}`,
+            localOnly: true,
+            open: false
+        })
+    },
+
+    start: () => {
+        entrypoint.build()
+                  .then(entrypoint.server)
+                  .catch(console.error)
+        
+    },
+
+    watch: () => {
+        process.env.NODE_ENV='development'
+
+        bs.watch('src/**/*.js', () => {
+            bs.notify("Compiling js, please wait!")
+            entrypoint.buildJS().then(bs.reload).catch(console.error)
+        })
+        
+        bs.watch('src/**/*.s?(c|a)ss', () => {
+            bs.notify("Compiling css, please wait!")
+            entrypoint.buildCSS().then(bs.reload).catch(console.error)
         })
 
-        if ('development' != process.env.NODE_ENV) {
-            entrypoint.dist.setup().then(() => {
-                buildPack().catch(err => reject(err))
-            }).catch(err => reject(err))
-        } else {
-            buildPack().catch(err => reject(err))
-        }
-    })
+        bs.watch('src/**/*.html', () => {
+            bs.notify("Compiling html, please wait!")
+            entrypoint.buildHTML().then(bs.reload).catch(console.error)
+        })
+
+        bs.watch('static/**/*', () => {
+            bs.notify("Moving static files, please wait!")
+            entrypoint.buildSTATIC().then(bs.reload).catch(console.error)
+        })
+
+        entrypoint.server()
+    }
 
 }
