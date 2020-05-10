@@ -28,7 +28,7 @@ module.exports = self = {
 
     buildScripts: () => require('esbuild').build({
         stdio: 'inherit',
-        selfs: [`${__dirname}/src/scripts/index.js`],
+        entrypoint: [`${__dirname}/src/scripts/index.js`],
         outfile: `${self.dist}/assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`,
         minify: 'development' != process.env.NODE_ENV,
         bundle: true,
