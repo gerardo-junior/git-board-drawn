@@ -1,38 +1,56 @@
 const bs = require('browser-sync').create()
     , fs = require('fs-extra')
 
-module.exports = entrypoint = {
+module.exports = self = {
 
     dist: { 
         toString: () => `${__dirname}/dist`,
-        setup: () => fs.existsSync(entrypoint.dist.toString()) ? fs.emptyDir(entrypoint.dist.toString()) : fs.ensureDir(entrypoint.dist.toString()),
+        setup: () => fs.existsSync(self.dist.toString()) ? fs.emptyDir(self.dist.toString()) : fs.ensureDir(self.dist.toString()),
     },
 
-    buildJS: () => require('esbuild').build({
+    package: {
+        file: './package.json',
+        cache: {},
+        cdn: {
+            toString: () => 'https://cdn.jsdelivr.net/gh/' + (('string' == typeof self.package.get().repository) ? self.package.get().repository : self.package.get().repository.url).replace(/.*https?:\/\/github.com\//gi, '').replace('.git', '@')
+        },
+        get: () => {
+            if (self.package.cache.file === self.package.file) {
+                return self.package.cache.content
+            }
+
+            self.package.cache.file = self.package.file
+            self.package.cache.content = JSON.parse(fs.readFileSync(self.package.file))
+
+            return self.package.cache.content
+        }
+    },
+
+    buildScripts: () => require('esbuild').build({
         stdio: 'inherit',
-        entryPoints: [`${__dirname}/src/scripts/index.js`],
-        outfile: `${entrypoint.dist}/assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`,
+        selfs: [`${__dirname}/src/scripts/index.js`],
+        outfile: `${self.dist}/assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`,
         minify: 'development' != process.env.NODE_ENV,
         bundle: true,
-        sourcemap: 'development' === process.env.NODE_ENV
+        sourcemap: 'production' != process.env.NODE_ENV
     }),
 
-    buildCSS: () => new Promise((resolve, reject) => {
+    buildStyles: () => new Promise((resolve, reject) => {
         require('node-sass').render({
             file: `${__dirname}/src/styles/index.scss`,
-            outFile: `${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`,
+            outFile: `${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`,
             sourceMap: 'development' === process.env.NODE_ENV,
             sourceMapContents: 'development' === process.env.NODE_ENV,
             outputStyle: 'development' === process.env.NODE_ENV ? 'expanded':'compressed'
         }, (err, data) => { 
             if (err) reject(err)
 
-            fs.outputFile(`${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, data.css).then(result => {
-                console.info(`Wrote to ${entrypoint.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`)
+            fs.outputFile(`${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, data.css).then(result => {
+                console.info(`Wrote to ${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`)
 
                 if ('development' === process.env.NODE_ENV) {
-                    fs.outputFile(`${entrypoint.dist}/assets/styles.css.map`, data.map).then(() => {
-                        console.info(`Wrote to ${entrypoint.dist}/assets/styles.css.map`)
+                    fs.outputFile(`${self.dist}/assets/styles.css.map`, data.map).then(() => {
+                        console.info(`Wrote to ${self.dist}/assets/styles.css.map`)
                     }).catch(reject)
                 }
 
@@ -42,32 +60,33 @@ module.exports = entrypoint = {
         })
     }),
 
-    buildHTML: () => new Promise((resolve, reject) => {
+    buildTemplade: () => new Promise((resolve, reject) => {
         fs.readFile(`${__dirname}/src/index.html`).then(async data => {
         
-            let assets = { styles: {url: `assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, options: 'rel=stylesheet'},
-                           scripts: {url: `assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`, options: 'async'}}
+            let assets = {}
 
-            if ('development' != process.env.NODE_ENV) {
+            arr = ['styles', 'scripts'] // I didn't use foreach because it is more fast is and I needed an async function
+            for (var i = 0, len = arr.length; i < len; i++) {
+                assets[arr[i]] = {url: `assets/${arr[i] + ('development' != process.env.NODE_ENV ? '.min' : '')}.${'scripts'  === arr[i] ? 'js' : 'css'}`, options: ''}
 
-                if (!fs.existsSync(`${entrypoint.dist}/${assets.styles.url}`)) {
-                    await entrypoint.buildCSS().catch(reject)
+                if ('development' != process.env.NODE_ENV) {
+
+                    if (!fs.existsSync(`${self.dist}/${assets[arr[i]].url}`)) {
+                        await self[`build${arr[i].charAt(0).toUpperCase() + arr[i].slice(1)}`]().catch(reject)
+                    } 
+                    assets[arr[i]].options = `integrity=${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)} crossorigin=anonymous`
                 }
-                assets.styles.options += ` integrity=sha256-${require('sha256-file')(`${entrypoint.dist}/${assets.styles.url}`)} crossorigin=anonymous`
 
-                if (!fs.existsSync(`${entrypoint.dist}/${assets.scripts.url}`)) {
-                    await entrypoint.buildJS().catch(reject)
+                if ('production' === process.env.NODE_ENV) {
+                    assets[arr[i]].url = `${self.package.cdn + self.package.get().version}/${assets[arr[i]].url}`
+                } else {
+                    assets[arr[i]].url = `./${assets[arr[i]].url}?v=${self.package.get().version}`
                 }
-                assets.scripts.options += ` integrity=sha256-${require('sha256-file')(`${entrypoint.dist}/${assets.scripts.url}`)} crossorigin=anonymous`
-
-                jsdelivr = 'https://cdn.jsdelivr.net/gh/gerardo-junior/git-board-drawn@gh-page'
-
-                assets.styles.url = `${jsdelivr}/${assets.styles.url}`
-                assets.scripts.url = `${jsdelivr}/${assets.scripts.url}`
+            
             }
 
-            let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.options} href=${assets.styles.url}>`)
-                                      .replace('<!--#scripts#-->', `<script ${assets.scripts.options} src=${assets.scripts.url}></script>`)
+            let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.options} href=${'production' === process.env.NODE_ENV ? `${self.production.cdn}`:'.'}/${assets.styles.url} rel=stylesheet>`)
+                                      .replace('<!--#scripts#-->', `<script ${assets.scripts.options} src=${'production' === process.env.NODE_ENV ? `${self.production.cdn}`:'.'}/${assets.scripts.url} async></script>`)
 
             if ('development' != process.env.NODE_ENV) {
                 out = require('html-minifier').minify(out, {
@@ -78,8 +97,8 @@ module.exports = entrypoint = {
                 })
             }
 
-            fs.outputFile(`${entrypoint.dist}/index.html`, out).then(result => {
-                console.info(`Wrote to ${entrypoint.dist}/index.html`)
+            fs.outputFile(`${self.dist}/index.html`, out).then(result => {
+                console.info(`Wrote to ${self.dist}/index.html`)
                 
                 resolve(result)
 
@@ -89,18 +108,16 @@ module.exports = entrypoint = {
 
     }),
 
-    buildSTATIC: () => fs.copy(`${__dirname}/static`, `${entrypoint.dist}`, {overwrite: false}),
+    buildStatic: () => fs.copy(`${__dirname}/static`, `${self.dist}`, {overwrite: false}),
 
     build: () => new Promise((resolve, reject) => {
-        const buildPack = () => new Promise(async (resolve, reject) => {
-            await entrypoint.buildSTATIC().catch(reject)
-            await entrypoint.buildCSS().catch(reject)
-            await entrypoint.buildJS().catch(reject)
-            await entrypoint.buildHTML().catch(reject)
-        })
+        const buildPack = () => Promise.all([self.buildStatic(),
+                                             self.buildStyles(),
+                                             self.buildScripts(),
+                                             self.buildTemplade()])
         
         if ('development' != process.env.NODE_ENV) {
-            entrypoint.dist.setup()
+            self.dist.setup()
                            .then(buildPack)
                            .catch(reject)
         } else {
@@ -111,15 +128,15 @@ module.exports = entrypoint = {
 
     server: () => {
         bs.init({
-            server: `${entrypoint.dist}`,
+            server: `${self.dist}`,
             localOnly: true,
             open: false
         })
     },
 
     start: () => {
-        entrypoint.build()
-                  .then(entrypoint.server)
+        self.build()
+                  .then(self.server)
                   .catch(console.error)
         
     },
@@ -129,25 +146,25 @@ module.exports = entrypoint = {
 
         bs.watch('src/**/*.js', () => {
             bs.notify("Compiling js, please wait!")
-            entrypoint.buildJS().then(bs.reload).catch(console.error)
+            self.buildScripts().then(bs.reload).catch(console.error)
         })
         
         bs.watch('src/**/*.s?(c|a)ss', () => {
             bs.notify("Compiling css, please wait!")
-            entrypoint.buildCSS().then(bs.reload).catch(console.error)
+            self.buildStyles().then(bs.reload).catch(console.error)
         })
 
         bs.watch('src/**/*.html', () => {
             bs.notify("Compiling html, please wait!")
-            entrypoint.buildHTML().then(bs.reload).catch(console.error)
+            self.buildTemplade().then(bs.reload).catch(console.error)
         })
 
         bs.watch('static/**/*', () => {
             bs.notify("Moving static files, please wait!")
-            entrypoint.buildSTATIC().then(bs.reload).catch(console.error)
+            self.buildStatic().then(bs.reload).catch(console.error)
         })
 
-        entrypoint.server()
+        self.server()
     }
 
 }

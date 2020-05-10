@@ -2,17 +2,17 @@
   "name": "git-board-drawn",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "entrypoint.js",
   "scripts": {
     "dev:start": "node -e \"require('./entrypoint').start()\"",
     "dev:server": "node -e \"require('./entrypoint').watch()\"",
     "dev:watch": "node -e \"require('./entrypoint').watch()\"",
     "dev:unboost": "sudo umount -f ./dist",
     "dev:boost": "sudo mount -t tmpfs -o size=265m tmpfs ./dist",
-    "build:js": "node -e \"require('./entrypoint').buildJS()\"",
-    "build:css": "node -e \"require('./entrypoint').buildCSS()\"",
-    "build:html": "node -e \"require('./entrypoint').buildHTML()\"",
-    "build:static": "node -e \"require('./entrypoint').buildSTATIC()\"",
+    "build:js": "node -e \"require('./entrypoint').buildScripts()\"",
+    "build:css": "node -e \"require('./entrypoint').buildStyles()\"",
+    "build:html": "node -e \"require('./entrypoint').buildTemplade()\"",
+    "build:static": "node -e \"require('./entrypoint').buildStatic()\"",
     "build": "node -e \"require('./entrypoint').build()\"",
     "test": "echo \"no tests\""
   },
@@ -31,6 +31,6 @@
     "esbuild": "^0.2.6",
     "html-minifier": "^4.0.0",
     "node-sass": "^4.14.1",
-    "sha256-file": "^1.0.0"
+    "ssri": "^8.0.0"
   }
 }
