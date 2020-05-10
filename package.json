@@ -4,8 +4,6 @@
   "description": "",
   "main": "entrypoint.js",
   "scripts": {
-    "dev:start": "node -e \"require('./entrypoint').start()\"",
-    "dev:server": "node -e \"require('./entrypoint').watch()\"",
     "dev:watch": "node -e \"require('./entrypoint').watch()\"",
     "dev:unboost": "sudo umount -f ./dist",
     "dev:boost": "sudo mount -t tmpfs -o size=265m tmpfs ./dist",
@@ -14,6 +12,8 @@
     "build:html": "node -e \"require('./entrypoint').buildTemplade()\"",
     "build:static": "node -e \"require('./entrypoint').buildStatic()\"",
     "build": "node -e \"require('./entrypoint').build()\"",
+    "server": "node -e \"require('./entrypoint').server()\"",
+    "start": "node -e \"require('./entrypoint').start()\"",
     "test": "echo \"no tests\""
   },
   "repository": {

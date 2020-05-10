@@ -26,29 +26,31 @@ module.exports = self = {
         }
     },
 
+    environment: () => !process.env.NODE_ENV ? 'development' : process.env.NODE_ENV,
+
     buildScripts: () => require('esbuild').build({
         stdio: 'inherit',
         entryPoints: [`${__dirname}/src/scripts/index.js`],
-        outfile: `${self.dist}/assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`,
-        minify: 'development' != process.env.NODE_ENV,
+        outfile: `${self.dist}/assets/scripts${'production' === self.environment() ? '.min' : ''}.js`,
+        minify: 'production' == self.environment(),
         bundle: true,
-        sourcemap: 'production' != process.env.NODE_ENV
+        sourcemap: 'production' != self.environment()
     }),
 
     buildStyles: () => new Promise((resolve, reject) => {
         require('node-sass').render({
             file: `${__dirname}/src/styles/index.scss`,
-            outFile: `${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`,
-            sourceMap: 'development' === process.env.NODE_ENV,
-            sourceMapContents: 'development' === process.env.NODE_ENV,
-            outputStyle: 'development' === process.env.NODE_ENV ? 'expanded':'compressed'
+            outFile: `${self.dist}/assets/styles${'production' === self.environment() ? '.min' : ''}.css`,
+            sourceMap: 'production' != self.environment(),
+            sourceMapContents: 'production' != self.environment(),
+            outputStyle: 'production' == self.environment() ? 'compressed' : 'expanded'
         }, (err, data) => { 
             if (err) reject(err)
 
-            fs.outputFile(`${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`, data.css).then(result => {
-                console.info(`Wrote to ${self.dist}/assets/styles${'development' != process.env.NODE_ENV ? '.min' : ''}.css`)
+            fs.outputFile(`${self.dist}/assets/styles${'production' === self.environment() ? '.min' : ''}.css`, data.css).then(result => {
+                console.info(`Wrote to ${self.dist}/assets/styles${'production' === self.environment() ? '.min' : ''}.css`)
 
-                if ('development' === process.env.NODE_ENV) {
+                if ('production' != self.environment()) {
                     fs.outputFile(`${self.dist}/assets/styles.css.map`, data.map).then(() => {
                         console.info(`Wrote to ${self.dist}/assets/styles.css.map`)
                     }).catch(reject)
@@ -67,17 +69,17 @@ module.exports = self = {
 
             arr = ['styles', 'scripts'] // I didn't use foreach because it is more fast is and I needed an async function
             for (var i = 0, len = arr.length; i < len; i++) {
-                assets[arr[i]] = {url: `assets/${arr[i] + ('development' != process.env.NODE_ENV ? '.min' : '')}.${'scripts'  === arr[i] ? 'js' : 'css'}`, attributes: {crossorigin: 'anonymous'}}
+                assets[arr[i]] = {url: `assets/${arr[i] + ('production' === self.environment() ? '.min' : '')}.${'scripts'  === arr[i] ? 'js' : 'css'}`, attributes: ''}
 
-                if ('development' != process.env.NODE_ENV) {
+                if ('development' != self.environment()) {
 
                     if (!fs.existsSync(`${self.dist}/${assets[arr[i]].url}`)) {
                         await self[`build${arr[i].charAt(0).toUpperCase() + arr[i].slice(1)}`]().catch(reject)
                     } 
-                    assets[arr[i]].attributes.integrity = `${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)}`
+                    assets[arr[i]].attributes += `integrity=${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)} crossorigin=anonymous`
                 }
 
-                if ('production' === process.env.NODE_ENV) {
+                if ('production' === self.environment()) {
                     assets[arr[i]].url = `${self.package.cdn + self.package.get().version}/${assets[arr[i]].url}`
                 } else {
                     assets[arr[i]].url = `./${assets[arr[i]].url}?v=${self.package.get().version}`
@@ -85,10 +87,10 @@ module.exports = self = {
             
             }
 
-            let out =  data.toString().replace('<!--#styles#-->',  `<link rel=stylesheet integrity="${assets.styles.attributes.integrity}" crossorigin="${assets.styles.attributes.crossorigin}" href="${assets.styles.url}">`)
-                                      .replace('<!--#scripts#-->', `<script integrity="${assets.styles.attributes.integrity}" crossorigin="${assets.styles.attributes.crossorigin}" src="${assets.scripts.url}" async></script>`)
+            let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.attributes} href="${assets.styles.url}" rel=stylesheet>`)
+                                      .replace('<!--#scripts#-->', `<script ${assets.styles.attributes} src="${assets.scripts.url}" async></script>`)
 
-            if ('development' != process.env.NODE_ENV) {
+            if ('production' === self.environment()) {
                 out = require('html-minifier').minify(out, {
                     collapseWhitespace: true,
                     removeComments: true,
@@ -116,52 +118,45 @@ module.exports = self = {
                                              self.buildScripts(),
                                              self.buildTemplade()])
         
-        if ('development' != process.env.NODE_ENV) {
+        if ('development' != self.environment()) {
             self.dist.setup()
-                           .then(buildPack)
-                           .catch(reject)
+                     .then(() => {buildPack().then(resolve)
+                                             .catch(reject)})
+                     .catch(reject)
         } else {
             buildPack().then(resolve)
                        .catch(reject)
         }
     }),
 
-    server: () => {
-        bs.init({
-            server: `${self.dist}`,
-            localOnly: true,
-            open: false
-        })
-    },
+    server: () => bs.init({
+        server: `${self.dist}`,
+        localOnly: true,
+        open: false
+    }),
 
-    start: () => {
-        self.build()
-                  .then(self.server)
-                  .catch(console.error)
-        
-    },
+    start: () => self.build().then(self.server),
 
     watch: () => {
-        process.env.NODE_ENV='development'
 
         bs.watch('src/**/*.js', () => {
             bs.notify("Compiling js, please wait!")
-            self.buildScripts().then(bs.reload).catch(console.error)
+            self.buildScripts().then(bs.reload)
         })
         
         bs.watch('src/**/*.s?(c|a)ss', () => {
             bs.notify("Compiling css, please wait!")
-            self.buildStyles().then(bs.reload).catch(console.error)
+            self.buildStyles().then(bs.reload)
         })
 
         bs.watch('src/**/*.html', () => {
             bs.notify("Compiling html, please wait!")
-            self.buildTemplade().then(bs.reload).catch(console.error)
+            self.buildTemplade().then(bs.reload)
         })
 
         bs.watch('static/**/*', () => {
             bs.notify("Moving static files, please wait!")
-            self.buildStatic().then(bs.reload).catch(console.error)
+            self.buildStatic().then(bs.reload)
         })
 
         self.server()
