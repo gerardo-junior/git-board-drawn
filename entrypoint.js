@@ -28,7 +28,7 @@ module.exports = self = {
 
     buildScripts: () => require('esbuild').build({
         stdio: 'inherit',
-        entrypoint: [`${__dirname}/src/scripts/index.js`],
+        entryPoints: [`${__dirname}/src/scripts/index.js`],
         outfile: `${self.dist}/assets/scripts${'development' != process.env.NODE_ENV ? '.min' : ''}.js`,
         minify: 'development' != process.env.NODE_ENV,
         bundle: true,
@@ -67,14 +67,14 @@ module.exports = self = {
 
             arr = ['styles', 'scripts'] // I didn't use foreach because it is more fast is and I needed an async function
             for (var i = 0, len = arr.length; i < len; i++) {
-                assets[arr[i]] = {url: `assets/${arr[i] + ('development' != process.env.NODE_ENV ? '.min' : '')}.${'scripts'  === arr[i] ? 'js' : 'css'}`, options: ''}
+                assets[arr[i]] = {url: `assets/${arr[i] + ('development' != process.env.NODE_ENV ? '.min' : '')}.${'scripts'  === arr[i] ? 'js' : 'css'}`, attributes: {crossorigin: 'anonymous'}}
 
                 if ('development' != process.env.NODE_ENV) {
 
                     if (!fs.existsSync(`${self.dist}/${assets[arr[i]].url}`)) {
                         await self[`build${arr[i].charAt(0).toUpperCase() + arr[i].slice(1)}`]().catch(reject)
                     } 
-                    assets[arr[i]].options = `integrity=${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)} crossorigin=anonymous`
+                    assets[arr[i]].attributes.integrity = `${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)}`
                 }
 
                 if ('production' === process.env.NODE_ENV) {
@@ -85,8 +85,8 @@ module.exports = self = {
             
             }
 
-            let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.options} href=${'production' === process.env.NODE_ENV ? `${self.production.cdn}`:'.'}/${assets.styles.url} rel=stylesheet>`)
-                                      .replace('<!--#scripts#-->', `<script ${assets.scripts.options} src=${'production' === process.env.NODE_ENV ? `${self.production.cdn}`:'.'}/${assets.scripts.url} async></script>`)
+            let out =  data.toString().replace('<!--#styles#-->',  `<link rel=stylesheet integrity="${assets.styles.attributes.integrity}" crossorigin="${assets.styles.attributes.crossorigin}" href="${assets.styles.url}">`)
+                                      .replace('<!--#scripts#-->', `<script integrity="${assets.styles.attributes.integrity}" crossorigin="${assets.styles.attributes.crossorigin}" src="${assets.scripts.url}" async></script>`)
 
             if ('development' != process.env.NODE_ENV) {
                 out = require('html-minifier').minify(out, {
