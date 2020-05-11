@@ -88,7 +88,7 @@ module.exports = self = {
             }
 
             let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.attributes} href="${assets.styles.url}" rel=stylesheet>`)
-                                      .replace('<!--#scripts#-->', `<script ${assets.styles.attributes} src="${assets.scripts.url}" async></script>`)
+                                      .replace('<!--#scripts#-->', `<script ${assets.scripts.attributes} src="${assets.scripts.url}" async></script>`)
 
             if ('production' === self.environment()) {
                 out = require('html-minifier').minify(out, {
