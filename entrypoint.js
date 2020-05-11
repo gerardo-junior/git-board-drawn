@@ -15,12 +15,10 @@ module.exports = self = {
             toString: () => 'https://cdn.jsdelivr.net/gh/' + (('string' == typeof self.package.get().repository) ? self.package.get().repository : self.package.get().repository.url).replace(/.*https?:\/\/github.com\//gi, '').replace('.git', '@')
         },
         get: () => {
-            if (self.package.cache.file === self.package.file) {
-                return self.package.cache.content
+            if (self.package.cache.file != self.package.file) {
+                self.package.cache = { file: self.package.file,
+                                       content: JSON.parse(fs.readFileSync(self.package.file)) }
             }
-
-            self.package.cache.file = self.package.file
-            self.package.cache.content = JSON.parse(fs.readFileSync(self.package.file))
 
             return self.package.cache.content
         }
@@ -159,11 +157,7 @@ module.exports = self = {
             self.buildStatic().then(bs.reload)
         })
 
-        if ('linux' === process.platform) {
-            require("child_process").execSync('npm run dev:boost')
-        }
-
-        self.server()
+        return self.server()
     }
 
 }
