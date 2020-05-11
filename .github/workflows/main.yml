@@ -13,9 +13,17 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+      
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-npm-cache-
 
     - name: Install
-      uses: bahmutov/npm-install@v1
+      run: npm install
     
     - name: Lint
       run: npm run lint
