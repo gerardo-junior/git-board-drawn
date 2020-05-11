@@ -160,7 +160,6 @@ module.exports = self = {
         })
 
         if ('linux' === process.platform) {
-            console.log('Exec booster')
             require("child_process").execSync('npm run dev:boost')
         }
 
