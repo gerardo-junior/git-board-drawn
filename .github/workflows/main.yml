@@ -18,13 +18,13 @@ jobs:
       uses: jaid/action-npm-install@v1.2.1
     
     - name: Lint
-      run: npm run lint && touch 'test' && ls
-
+      run: npm run lint
+      
     - name: Test
-      run: npm run test && ls
+      run: npm run test
     
     - name: Build
-      run: npm run build && ls
+      run: npm run build
 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
