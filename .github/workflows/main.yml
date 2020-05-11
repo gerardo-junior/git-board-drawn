@@ -14,15 +14,25 @@ jobs:
         with:
           persist-credentials: false
           
-      - name: Install node
-        uses: bahmutov/npm-install@v1
-      
-      - name: Lint, Build, Test and Deploy
-        uses: actions/setup-node@v1
+      - name: Lint
+      - uses: actions/setup-node@v1
         with:
           node-version: 12.x
+      - uses: bahmutov/npm-install@v1
       - run: npm run lint
+
+      - name: Build
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - uses: bahmutov/npm-install@v1
       - run: npm run build
+
+      - name: Test
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+      - uses: bahmutov/npm-install@v1
       - run: npm run test
         
       - name: Deploy
@@ -30,4 +40,4 @@ jobs:
         with:
           ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
           BRANCH: gh-pages
-          FOLDER: build
+          FOLDER: dist
