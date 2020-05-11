@@ -2,42 +2,35 @@ name: Main action
 on:
   push:
     branches:
-      - 'master'
-env:
-  NODE_ENV: production
+      - master
 jobs:
-  main:
+  deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          
-      - name: Lint
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
-      - uses: bahmutov/npm-install@v1
-      - run: npm run lint
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      - name: Build
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
-      - uses: bahmutov/npm-install@v1
-      - run: npm run build
+    - name: Install
+      uses: actions/setup-node@v1
 
-      - name: Test
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
-      - uses: bahmutov/npm-install@v1
-      - run: npm run test
-        
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@releases/v3
-        with:
-          ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: dist
+    - name: Lint
+      run: npm run lint
+
+    - name: Test
+      run: npm run test
+
+    - name: Build
+      run: npm run build
+
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: dist
