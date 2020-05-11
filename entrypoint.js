@@ -5,7 +5,7 @@ module.exports = self = {
 
     dist: { 
         toString: () => `${__dirname}/dist`,
-        setup: () => fs.existsSync(self.dist.toString()) ? fs.emptyDir(self.dist.toString()) : fs.ensureDir(self.dist.toString()),
+        setup: () => fs.existsSync(self.dist.toString()) ? fs.emptyDir(self.dist.toString()) : fs.ensureDir(self.dist.toString(), { recursive: true }),
     },
 
     package: {
