@@ -19,21 +19,21 @@ jobs:
         with:
           node-version: 12.x
       - uses: bahmutov/npm-install@v1
-      - run: npm run lint
+        run: npm run lint
 
       - name: Build
       - uses: actions/setup-node@v1
         with:
           node-version: 12.x
       - uses: bahmutov/npm-install@v1
-      - run: npm run build
+        run: npm run build
 
       - name: Test
       - uses: actions/setup-node@v1
         with:
           node-version: 12.x
       - uses: bahmutov/npm-install@v1
-      - run: npm run test
+        run: npm run test
         
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
