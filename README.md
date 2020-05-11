@@ -1,1 +1,1 @@
-# git-board-drawn
+# git-board-drawn ![Main action](https://github.com/gerardo-junior/git-board-drawn/workflows/Main%20action/badge.svg)
