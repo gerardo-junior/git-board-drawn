@@ -11,22 +11,25 @@ jobs:
         node-version: [12.x]
     steps:
     - uses: actions/checkout@v1
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
 
     - name: Install
-      uses: actions/setup-node@v1
+      uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+    - run: npm ci
 
-    - name: Lint
-      run: npm run lint
+    - run: npm run lint
 
-    - name: Test
-      run: npm run test
-
-    - name: Build
-      run: npm run build
+    - run: npm run test
+    
+    - run: npm run build
 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
