@@ -6,8 +6,9 @@ on:
 
 jobs:
   main:
+    runs-on: ubuntu-latest
     container:
-      image: gerardojunior/nodejs:stable
+      image:  gerardojunior/nodejs:stable
       env:
         NODE_ENV: production
 
