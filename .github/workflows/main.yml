@@ -23,16 +23,16 @@ jobs:
           ${{ runner.OS }}-npm-cache-
 
     - name: Install
-      run: npm install
+      run: npm install & touch 'test'
     
     - name: Lint
-      run: npm run lint
+      run: npm run lint && ls
 
     - name: Test
-      run: npm run test
+      run: npm run test && ls
     
     - name: Build
-      run: npm run build
+      run: npm run build && ls
 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
