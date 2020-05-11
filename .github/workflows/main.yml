@@ -7,7 +7,7 @@ on:
 jobs:
   main:
     container:
-      image: gerardojunior/nodejs:stables
+      image: gerardojunior/nodejs:stable
       env:
         NODE_ENV: production
 
