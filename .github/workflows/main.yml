@@ -24,24 +24,16 @@ jobs:
           ${{ runner.os }}-
 
     - name: Install
-      uses: actions/npm@master
-      with:
-        args: install
+      run: npm install
     
     - name: Lint
-      uses: actions/npm@master
-      with:
-        args: run lint
+      run: npm run lint
 
     - name: Test
-      uses: actions/npm@master
-      with:
-        args: run test
+      run: npm run test
     
     - name: Build
-      uses: actions/npm@master
-      with:
-        args: run build
+      run: npm run build
 
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@releases/v3
