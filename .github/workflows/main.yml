@@ -17,11 +17,9 @@ jobs:
     - name: Cache dependencies
       id: cache
       uses: actions/cache@v1
-      run: echo "::set-output name=dir::$(npm config get cache)"
       with:
-        path: ${{ steps.npm-cache.outputs.dir }}
+        path: node_modules
         key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: ${{ runner.OS }}-npm-cache-
 
     - name: Install
       if: steps.cache.outputs.cache-hit != 'true'
