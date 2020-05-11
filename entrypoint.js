@@ -76,7 +76,7 @@ module.exports = self = {
                     if (!fs.existsSync(`${self.dist}/${assets[arr[i]].url}`)) {
                         await self[`build${arr[i].charAt(0).toUpperCase() + arr[i].slice(1)}`]().catch(reject)
                     } 
-                    assets[arr[i]].attributes += `integrity=${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`)).toString().slice(0, -2)} crossorigin=anonymous`
+                    assets[arr[i]].attributes += `integrity="${require('ssri').fromData(fs.readFileSync(`${self.dist}/${assets[arr[i]].url}`))}" crossorigin="anonymous"`
                 }
 
                 if ('production' === self.environment()) {
