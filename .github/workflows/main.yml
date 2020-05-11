@@ -1,4 +1,4 @@
-name: Lint, Build, Test and Deploy
+name: Main action
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
 env:
   NODE_ENV: production
 jobs:
-  build-and-deploy:
+  main:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,17 +14,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install
-        run: npm install
-      
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
-      
-      - name: Test
-        run: npm run test
+      - name: Lint, Build, Test and Deploy
+      - run: npm install
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run test
         
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
