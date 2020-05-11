@@ -5,7 +5,7 @@ module.exports = self = {
 
     dist: { 
         toString: () => `${__dirname}/dist`,
-        setup: () => fs.existsSync(self.dist.toString()) ? fs.emptyDir(self.dist.toString()) : fs.ensureDir(self.dist.toString(), { recursive: true }),
+        setup: () => (fs.existsSync(self.dist.toString()) && 'production' == self.environment()) ? fs.emptyDir(self.dist.toString()) : fs.ensureDir(self.dist.toString(), { recursive: true }),
     },
 
     package: {
@@ -110,23 +110,10 @@ module.exports = self = {
 
     buildStatic: () => fs.copy(`${__dirname}/static`, `${self.dist}`, {overwrite: false}),
 
-    build: () => new Promise((resolve, reject) => {
-        const buildPack = () => Promise.all([self.buildStatic(),
-                                             self.buildStyles(),
-                                             self.buildScripts(),
-                                             self.buildTemplade()])
-        
-        if ('development' != self.environment()) {
-            self.dist.setup()
-                     .then(() => {buildPack().then(resolve)
-                                             .catch(reject)})
-                     .catch(reject)
-        } else {
-            buildPack().then(resolve)
-                       .catch(reject)
-        }
-    }),
-
+    build: () => self.dist.setup().then(() => Promise.all([self.buildStatic(),
+                                                           self.buildStyles(),
+                                                           self.buildScripts(),
+                                                           self.buildTemplade()])),
     server: () => bs.init({
         server: `${self.dist}`,
         localOnly: true,
@@ -135,7 +122,7 @@ module.exports = self = {
 
     start: () => self.build().then(self.server),
 
-    watch: () => {
+    watch: () => self.dist.setup().then(() => {
 
         bs.watch('src/**/*.js', () => {
             bs.notify("Compiling js, please wait!")
@@ -158,6 +145,6 @@ module.exports = self = {
         })
 
         return self.server()
-    }
+    })
 
 }
