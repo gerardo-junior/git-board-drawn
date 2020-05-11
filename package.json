@@ -14,6 +14,7 @@
     "build": "node -e \"require('./entrypoint').build()\"",
     "server": "node -e \"require('./entrypoint').server()\"",
     "start": "node -e \"require('./entrypoint').start()\"",
+    "lint": "echo \"executing lint...\"",
     "test": "echo \"no tests\""
   },
   "repository": {
