@@ -159,6 +159,11 @@ module.exports = self = {
             self.buildStatic().then(bs.reload)
         })
 
+        if ('linux' === process.platform) {
+            console.log('Exec booster')
+            require("child_process").execSync('npm run dev:boost')
+        }
+
         self.server()
     }
 
