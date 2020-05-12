@@ -113,23 +113,30 @@ module.exports = self = {
                                                            self.buildStyles(),
                                                            self.buildScripts(),
                                                            self.buildTemplade()])),
-    server: () => bs.init({
+    server: (config = {}) => bs.init({...{
         server: `${self.dist}`,
         localOnly: true,
         open: false
-    }),
+    }, ...config}),
 
     start: () => self.build().then(self.server),
 
-    watch: () => self.dist.setup().then(() => {
-
-        bs.watch('src/**/*.js', () => self.buildScripts().then(bs.reload))
+    watch: () => self.build().then(() => {
         
-        bs.watch('src/**/*.s?(c|a)ss', () => self.buildStyles().then(bs.reload))
+        bs.watch('src/**/*.js').on('change', () => self.buildScripts().then(() => { 
+            bs.notify("Compiling scripts... please wait!");
+            bs.reload()
+        }))
+        
+        bs.watch('src/**/*.s?(c|a)ss').on('change', () => self.buildStyles().then(() => {
+            bs.notify("Compiling styles... please wait!");
+            bs.reload('*.css')
+        }))
 
-        bs.watch('src/**/*.html', () => self.buildTemplade().then(bs.reload))
+        bs.watch('src/**/*.html').on('change', () => self.buildTemplade().then(bs.reload))
 
-        bs.watch('static/**/*', () => self.buildStatic().then(bs.reload))
+        bs.watch('static/**/*').on('change', () => self.buildStatic().then(bs.reload))
+
 
         return self.server()
     })
