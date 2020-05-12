@@ -85,8 +85,7 @@ module.exports = self = {
             
             }
 
-            let out =  data.toString().replace('<!--#styles#-->',  `<link ${assets.styles.attributes} href="${assets.styles.url}" rel=stylesheet>`)
-                                      .replace('<!--#scripts#-->', `<script ${assets.scripts.attributes} src="${assets.scripts.url}" async></script>`)
+            let out = data.toString().replace(/{{\s*([^}]*)\s*}}/gmi, (m, $1) => eval($1));
 
             if ('production' === self.environment()) {
                 out = require('html-minifier').minify(out, {
@@ -124,25 +123,13 @@ module.exports = self = {
 
     watch: () => self.dist.setup().then(() => {
 
-        bs.watch('src/**/*.js', () => {
-            bs.notify("Compiling js, please wait!")
-            self.buildScripts().then(bs.reload)
-        })
+        bs.watch('src/**/*.js', () => self.buildScripts().then(bs.reload))
         
-        bs.watch('src/**/*.s?(c|a)ss', () => {
-            bs.notify("Compiling css, please wait!")
-            self.buildStyles().then(bs.reload)
-        })
+        bs.watch('src/**/*.s?(c|a)ss', () => self.buildStyles().then(bs.reload))
 
-        bs.watch('src/**/*.html', () => {
-            bs.notify("Compiling html, please wait!")
-            self.buildTemplade().then(bs.reload)
-        })
+        bs.watch('src/**/*.html', () => self.buildTemplade().then(bs.reload))
 
-        bs.watch('static/**/*', () => {
-            bs.notify("Moving static files, please wait!")
-            self.buildStatic().then(bs.reload)
-        })
+        bs.watch('static/**/*', () => self.buildStatic().then(bs.reload))
 
         return self.server()
     })
