@@ -153,7 +153,7 @@ module.exports = self = {
         }
 
         if (!!process.env.GITHUB_SHA) {
-            options.message = `@ ${process.env.GITHUB_SHA}`
+            options.message += `@ ${process.env.GITHUB_SHA}`
         }
 
         if (!!process.env.DEPLOY_ACCESS_TOKEN) {
@@ -162,10 +162,6 @@ module.exports = self = {
             options.repo = repo.href
         }
 
-        console.log(options)
-
-        
-        
         require('gh-pages').publish(self.dist.toString(), options, err => {
             if (err) return console.error(err)
 
