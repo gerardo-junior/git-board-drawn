@@ -1,6 +1,6 @@
 {
   "name": "git-board-drawn",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "main": "entrypoint.js",
   "scripts": {
@@ -14,7 +14,6 @@
     "build": "node -e \"require('./entrypoint').build()\"",
     "server": "node -e \"require('./entrypoint').server()\"",
     "start": "node -e \"require('./entrypoint').start()\"",
-    "deploy": "node -e \"require('./entrypoint').deploy()\"",
     "lint": "echo \"executing lint...\"",
     "test": "echo \"no tests\""
   },
