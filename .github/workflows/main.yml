@@ -14,9 +14,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v1
- 
+    
+    - name: Cache dependencies
+      uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: ${{ runner.os }}-node-
+    
     - name: Install dependencies
-      uses: bahmutov/npm-install@v1
+      uses: npm ci
     
     - name: Lint code
       run: npm run lint
