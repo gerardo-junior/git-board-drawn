@@ -162,6 +162,8 @@ module.exports = self = {
             options.repo = repo.href
         }
 
+        console.log(options)
+
         
         
         require('gh-pages').publish(self.dist.toString(), options, err => {
