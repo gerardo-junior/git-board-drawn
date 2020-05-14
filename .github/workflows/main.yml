@@ -28,8 +28,4 @@ jobs:
       run: npm run build
 
     - name: Deploy to github pages
-      uses: JamesIves/github-pages-deploy-action@releases/v3
-      with:
-        ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: dist
+      run: npm run deploy

@@ -136,6 +136,34 @@ module.exports = self = {
 
 
         return self.server()
-    })
+    }),
+
+    deploy: () => {
+
+        if (!fs.existsSync(self.dist.toString())) return console.error('Dist folder not found')
+
+        let options = {
+            message: `Deploying to gh-pages`,
+            tag: self.package.get().version
+        }
+
+        if (!!process.env.GITHUB_SHA) {
+            options.message = `@ ${process.env.GITHUB_SHA}`
+        }
+
+        if (!!process.env.DEPLOY_ACCESS_TOKEN) {
+            let repo = new URL(('string' == typeof self.package.get().repository) ? self.package.get().repository : self.package.get().repository.url)
+            repo.username = process.env.DEPLOY_ACCESS_TOKEN
+            options.repo = repo.href
+        }
+
+        
+        
+        require('gh-pages').publish(self.dist.toString(), options, err => {
+            if (err) return console.error(err)
+
+        })
+
+    }
 
 }
