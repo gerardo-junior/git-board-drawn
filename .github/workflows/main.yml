@@ -12,29 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout repository
+      uses: actions/checkout@v1
+ 
+    - name: Install dependencies
+      uses: bahmutov/npm-install@v1
     
-    - name: Cache dependencies
-      id: cache
-      uses: actions/cache@v1
-      with:
-        path: node_modules
-        key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
-
-    - name: Install
-      if: steps.cache.outputs.cache-hit != 'true'
-      uses: jaid/action-npm-install@v1.2.1
-    
-    - name: Lint
+    - name: Lint code
       run: npm run lint
       
-    - name: Test
+    - name: Test architecture
       run: npm run test
     
-    - name: Build
+    - name: Build app
       run: npm run build
 
-    - name: Deploy
+    - name: Deploy to github pages
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
         ACCESS_TOKEN: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
