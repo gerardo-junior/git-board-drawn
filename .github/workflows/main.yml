@@ -36,6 +36,7 @@ jobs:
       with:
         github_token: ${{ secrets.DEPLOY_ACCESS_TOKEN }}
         publish_dir: ./dist
+        force_orphan: true
         enable_jekyll: true
         tag_name: ${{ steps.prepare_tag.outputs.tag }}
         commit_message: ${{ github.event.head_commit.message }}
