@@ -27,11 +27,15 @@
     "url": "https://github.com/gerardo-junior/git-board-drawn/issues"
   },
   "homepage": "https://git-board-drawn.gerardo-junior.com",
-  "devDependencies": {
+  "dependencies": {
     "browser-sync": "^2.26.7",
     "esbuild": "^0.2.6",
     "html-minifier": "^4.0.0",
     "node-sass": "^4.14.1",
     "ssri": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=12.16.3",
+    "npm": ">=6.14.5"
   }
 }
