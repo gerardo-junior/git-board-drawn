@@ -1,6 +1,6 @@
 {
   "name": "git-board-drawn",
-  "version": "1.0.5",
+  "version": "1.0.0",
   "description": "",
   "main": "entrypoint.js",
   "scripts": {
