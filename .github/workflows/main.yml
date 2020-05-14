@@ -23,7 +23,7 @@ jobs:
         restore-keys: ${{ runner.os }}-node-
     
     - name: Install dependencies
-      uses: npm ci
+      run: npm ci
     
     - name: Lint code
       run: npm run lint
