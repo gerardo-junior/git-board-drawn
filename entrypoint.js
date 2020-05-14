@@ -144,7 +144,12 @@ module.exports = self = {
 
         let options = {
             message: `Deploying to gh-pages`,
-            tag: self.package.get().version
+            tag: self.package.get().version            
+        }
+
+        if (!!process.env.GIT_CONFIG_NAME && !!process.env.GIT_CONFIG_EMAIL) {
+            options.name = process.env.GIT_CONFIG_NAME,
+            options.email = process.env.GIT_CONFIG_EMAIL
         }
 
         if (!!process.env.GITHUB_SHA) {
