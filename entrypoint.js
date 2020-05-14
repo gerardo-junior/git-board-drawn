@@ -123,10 +123,7 @@ module.exports = self = {
 
     watch: () => self.build().then(() => {
         
-        bs.watch('src/**/*.js').on('change', () => self.buildScripts().then(() => { 
-            bs.notify("Compiling scripts... please wait!");
-            bs.reload()
-        }))
+        bs.watch('src/**/*.js').on('change', () => self.buildScripts().then(bs.reload))
         
         bs.watch('src/**/*.s?(c|a)ss').on('change', () => self.buildStyles().then(() => {
             bs.notify("Compiling styles... please wait!");
