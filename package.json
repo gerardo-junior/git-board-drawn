@@ -28,7 +28,7 @@
   },
   "homepage": "https://git-board-drawn.gerardo-junior.com",
   "dependencies": {
-    "browser-sync": "^2.26.7",
+    "browser-sync": "^2.27.10",
     "esbuild": "^0.2.6",
     "gh-pages": "^2.2.0",
     "html-minifier": "^4.0.0",
